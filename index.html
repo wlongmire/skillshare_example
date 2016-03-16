@@ -1,0 +1,282 @@
+<!doctype html>
+<html>
+<head>
+	
+<style>
+	body{
+		background-color: black;
+		text-align: center;
+	}
+
+	canvas {
+		width:80%;
+		width:80%;
+		background-color: black;
+	}
+
+	h1 {
+		color:white;
+	}
+</style>
+</head>
+
+<body>
+	
+	<h1 id="counter">1</h1>
+
+	<canvas id="myCanvas"></canvas>
+	<script src="https://code.jquery.com/jquery-2.2.1.js"   integrity="sha256-eNcUzO3jsv0XlJLveFEkbB8bA7/CroNpNVk3XpmnwHc="   crossorigin="anonymous"></script>
+	<script src="http://cdnjs.cloudflare.com/ajax/libs/gsap/1.15.0/TimelineLite.min.js"></script>
+	<script src="http://cdnjs.cloudflare.com/ajax/libs/gsap/1.15.0/TweenMax.min.js"></script>
+	<script src="https://code.createjs.com/createjs-2015.11.26.min.js"></script>
+
+	
+	<script>
+		// ******************************** //
+		// ready command (starts when webpage (DOM) is completely loaded
+		// ******************************** //
+
+		$(function() {
+
+			var canvas = document.getElementById('myCanvas'),
+				Utils = {
+					createStage:function() {
+						var stage = new createjs.Stage("myCanvas");
+						return(stage);
+					},
+
+					createBkg:function() {
+						var bkg = new createjs.Shape();
+
+						bkg.graphics.beginFill("white").drawRect(0,0, canvas.width, canvas.height);
+						stage.addChild(bkg);
+
+						return(bkg);
+					},
+
+					createCar:function() {
+						var car = new createjs.Container(),
+							wheel1 = new createjs.Shape(),
+							wheel2 = new createjs.Shape(),
+							body = new createjs.Shape();
+						
+						body.graphics.beginFill("red").drawRect(-50, -25, 100, 50);
+						body.x = 0;
+						body.y = 0;
+
+						wheel1.graphics.beginFill("#aa0000").drawCircle(0,0,10);
+						wheel1.x = body.x - 25;
+						wheel1.y = body.y + 25;
+
+						wheel2.graphics.beginFill("#aa0000").drawCircle(0,0,10);
+						wheel2.x = body.x + 25;
+						wheel2.y = body.y + 25;
+
+						car.addChild(wheel1);
+						car.addChild(wheel2);
+						car.addChild(body);
+
+						car.x = canvas.width/2;
+						car.y = canvas.height/2;
+						
+						car.scaleX = car.scaleY = 0.5;
+
+						stage.addChild(car);
+
+						return(car);
+					}
+				},
+				example = "mouse_input";
+
+			switch(example) {
+				case("direct_canvas"):
+					// ******************************** //
+					// Working directly with the canvas
+					// ******************************** //
+
+					var ctx = canvas.getContext("2d");
+						ctx.fillStyle = "#FF0000";
+
+					ctx.fillRect(canvas.width/2 - 50,canvas.height/2 - 50, 100, 100);
+					break;
+
+				case("basic_createjs"):
+					// ******************************** //
+					// Setting up with createjs
+					// ******************************** //
+
+					var stage = new createjs.Stage("myCanvas"),
+						bkg = new createjs.Shape();
+
+					// ******************************** //
+					// Simple Shape Creation
+					// ******************************** //
+					
+					bkg.graphics.beginFill("white").drawRect(0,0, canvas.width, canvas.height);
+					stage.addChild(bkg);
+					stage.update();
+					break;
+
+				case("composite_shapes"):
+					var stage = Utils.createStage(),
+						bkg = Utils.createBkg(stage);
+
+					var car = new createjs.Container(),
+						wheel1 = new createjs.Shape(),
+						wheel2 = new createjs.Shape(),
+						body = new createjs.Shape();
+					
+					body.graphics.beginFill("red").drawRect(-50, -25, 100, 50);
+					body.x = 0;
+					body.y = 0;
+
+					wheel1.graphics.beginFill("#aa0000").drawCircle(0,0,10);
+					wheel1.x = body.x - 25;
+					wheel1.y = body.y + 25;
+
+					wheel2.graphics.beginFill("#aa0000").drawCircle(0,0,10);
+					wheel2.x = body.x + 25;
+					wheel2.y = body.y + 25;
+
+					car.addChild(wheel1);
+					car.addChild(wheel2);
+					car.addChild(body);
+
+					car.alpha = 0.4;
+					car.rotation = 30;
+					car.scaleX = car.scaleY = 0.5;
+
+					car.x = canvas.width/2;
+					car.y = canvas.height/2;
+
+					stage.addChild(car);
+					stage.update();
+					break;
+
+				case("basic_animation"):
+					var stage = Utils.createStage(),
+						bkg = Utils.createBkg(stage),
+						car = Utils.createCar(stage);
+
+					//****************************
+					//set starting position
+					//****************************
+
+					car.x = -60;
+					car.y = canvas.height/2;
+					
+					var speed = 5,
+						interval = setInterval(function(){
+							car.x += speed;
+							stage.update();
+							
+							if (car.x > canvas.width + 60) {
+								clearInterval(interval);
+							}
+						}, 100);
+
+					break;
+				case("tween_animation"):
+					var stage = Utils.createStage(),
+						bkg = Utils.createBkg(stage),
+						car = Utils.createCar(stage);
+
+					createjs.Ticker.setFPS(60);
+					createjs.Ticker.addEventListener("tick", stage);
+					
+					$("#counter").css('display', 'block');
+
+					var anim = new TimelineMax({paused:true, repeat:-1});
+					$('#counter').text(0)
+
+					anim.add(function(){
+							car.scaleX = car.scaleY = 0.5;
+						})
+						.fromTo(car, 1, {x:-100}, {x:canvas.width/2})
+						.to(car, 1, {rotation:360, ease:Expo.easeOut})
+						.to(car, 0.5, {x:canvas.width + 50, ease:Back.easeIn})
+						.add(function(){
+							$('#counter').text(	Number($('#counter').text()) + 1)
+						})
+						.play();
+					break;
+				case("keyboard_input"):
+					// ******************************** //
+					// Keyboard Input
+					// ******************************** //
+					var stage = Utils.createStage(),
+						bkg = Utils.createBkg(stage),
+						car = Utils.createCar(stage);
+
+
+					var speed = 5;
+					
+
+					$("#counter").css('display', 'block');
+					$('#counter').text(speed);
+
+					window.onkeydown = function(e){
+						switch(e.code) {
+							case("ArrowLeft"):
+								car.x -= speed;
+								break;
+
+							case("ArrowRight"):
+								car.x += speed;
+								break;
+
+							case("ArrowDown"):
+								speed -= 1;
+								//inline conditional. Puts bounds on speed
+								speed = (speed < 1)?1:speed;
+								
+								$('#counter').text(speed);
+								break;
+
+							case("ArrowUp"):
+								speed += 1;
+								speed = (speed > 50)?50:speed;
+
+								$('#counter').text(speed);
+								break;
+						}
+
+						stage.update();
+					};
+					break;
+				case("mouse_input"):
+
+					// ******************************** //
+					// Mouse Input
+					// ******************************** //
+					var stage = Utils.createStage(),
+						bkg = Utils.createBkg(stage),
+						car = Utils.createCar(stage);
+
+					stage.enableMouseOver(100);
+					createjs.Ticker.setFPS(60);
+					createjs.Ticker.addEventListener("tick", stage);
+
+					bkg.addEventListener("mousedown",function(e){
+						
+						var anim = new TimelineMax({paused:true});
+
+						anim.to(car, 0.5, {x:e.stageX, y:e.stageY});
+						anim.play();
+						
+					});
+
+					car.addEventListener("click", function(e){
+						var anim = new TimelineMax({paused:true});
+
+						anim.to(car, 0.5, {rotation:"+=360", ease:Expo.easeOut});
+						anim.play();
+					});
+
+					break;
+			}
+					
+		});
+	</script>
+</body>
+</html>
